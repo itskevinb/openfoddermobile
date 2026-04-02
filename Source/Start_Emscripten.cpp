@@ -31,7 +31,7 @@ void menu_loop() {
 
 	static int16 result = -1;
 	if (result == -1) {
-		g_Fodder->VersionSwitch(g_Fodder->mVersions->GetForCampaign("Amiga Format Christmas Special"));
+		g_Fodder->VersionSwitch(g_Fodder->mVersions->GetForCampaign("Amiga Action"));
 		g_Fodder->mGame_Data.mCampaign.Clear();
 
 		result = 0;
