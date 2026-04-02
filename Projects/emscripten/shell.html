@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Open Fodder">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Open Fodder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        canvas#canvas {
+            display: block;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        #controls-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            pointer-events: none;
+            z-index: 100;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            display: none;
+        }
+
+        #controls-overlay.mobile {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-left: max(12px, env(safe-area-inset-left));
+            padding-right: max(12px, env(safe-area-inset-right));
+        }
+
+        .touch-btn {
+            pointer-events: auto;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: bold;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: none;
+        }
+
+        .touch-btn:active, .touch-btn.active {
+            background: rgba(255, 80, 80, 0.5);
+            border-color: rgba(255, 80, 80, 0.8);
+        }
+
+        #btn-fire {
+            width: 80px;
+            height: 80px;
+            font-size: 14px;
+        }
+
+        #btn-squad {
+            font-size: 11px;
+        }
+
+        .controls-left, .controls-right {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        #loading-screen h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #loading-bar-container {
+            width: 200px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: #4a9;
+            transition: width 0.2s;
+        }
+
+        #loading-status {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        #fullscreen-prompt {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #fullscreen-prompt p {
+            font-size: 16px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        #fullscreen-prompt button {
+            background: #4a9;
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #orientation-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #orientation-warning .rotate-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        #orientation-warning p {
+            font-size: 18px;
+        }
+
+        @media (orientation: portrait) and (max-width: 900px) {
+            #orientation-warning {
+                display: flex;
+            }
+            #canvas-container, #controls-overlay {
+                visibility: hidden;
+            }
+        }
+
+        @media (orientation: landscape) and (max-width: 900px) {
+            #orientation-warning {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-screen">
+        <h1>Open Fodder</h1>
+        <div id="loading-bar-container">
+            <div id="loading-bar"></div>
+        </div>
+        <div id="loading-status">Loading...</div>
+    </div>
+
+    <div id="orientation-warning">
+        <div class="rotate-icon">&#x1F504;</div>
+        <p>Please rotate your device to landscape mode</p>
+    </div>
+
+    <div id="fullscreen-prompt">
+        <p>Tap to start Open Fodder</p>
+        <button id="start-btn">Start Game</button>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    </div>
+
+    <div id="controls-overlay">
+        <div class="controls-left">
+            <button class="touch-btn" id="btn-squad">Squad</button>
+        </div>
+        <div class="controls-right">
+            <button class="touch-btn" id="btn-fire">Fire</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                       ('ontouchstart' in window && window.innerWidth < 1200);
+
+        // Show mobile controls
+        if (isMobile) {
+            document.getElementById('controls-overlay').classList.add('mobile');
+        }
+
+        // Prevent all default touch behaviors on the document
+        document.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Prevent double-tap zoom
+        var lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            var now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, { passive: false });
+
+        // Prevent pinch zoom
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Fire button handling - inject right-click events into the canvas
+        var fireBtn = document.getElementById('btn-fire');
+        var canvas = document.getElementById('canvas');
+
+        fireBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fireBtn.classList.add('active');
+
+            // Send a right mouse button down event to the canvas
+            var rect = canvas.getBoundingClientRect();
+            canvas.dispatchEvent(new MouseEvent('mousedown', {
+                button: 2,
+                buttons: 2,
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2
+            }));
+        }, { passive: false });
+
+        fireBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            fireBtn.classList.remove('active');
+
+            var rect = canvas.getBoundingClientRect();
+            canvas.dispatchEvent(new MouseEvent('mouseup', {
+                button: 2,
+                buttons: 0,
+                clientX: rect.left + rect.width / 2,
+                clientY: rect.top + rect.height / 2
+            }));
+        }, { passive: false });
+
+        // Squad button - cycle squads via keyboard shortcut (1/2/3 keys)
+        var squadBtn = document.getElementById('btn-squad');
+        var currentSquad = 0;
+        var squadKeys = [49, 50, 51]; // key codes for 1, 2, 3
+
+        squadBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            squadBtn.classList.add('active');
+
+            currentSquad = (currentSquad + 1) % 3;
+            var scancode = squadKeys[currentSquad];
+
+            canvas.dispatchEvent(new KeyboardEvent('keydown', {
+                keyCode: scancode,
+                which: scancode,
+                key: String(currentSquad + 1)
+            }));
+        }, { passive: false });
+
+        squadBtn.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            squadBtn.classList.remove('active');
+
+            var scancode = squadKeys[currentSquad];
+            canvas.dispatchEvent(new KeyboardEvent('keyup', {
+                keyCode: scancode,
+                which: scancode,
+                key: String(currentSquad + 1)
+            }));
+        }, { passive: false });
+
+        // Canvas sizing for mobile
+        function resizeCanvas() {
+            if (!isMobile) return;
+
+            var container = document.getElementById('canvas-container');
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+
+            // Game aspect ratio is 320:200 = 16:10 = 1.6
+            var gameAspect = 320 / 200;
+            var screenAspect = w / h;
+
+            var canvasW, canvasH;
+            if (screenAspect > gameAspect) {
+                // Screen is wider than game - fit to height
+                canvasH = h;
+                canvasW = Math.floor(h * gameAspect);
+            } else {
+                // Screen is taller than game - fit to width
+                canvasW = w;
+                canvasH = Math.floor(w / gameAspect);
+            }
+
+            canvas.style.width = canvasW + 'px';
+            canvas.style.height = canvasH + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', function() {
+            setTimeout(resizeCanvas, 100);
+        });
+
+        // Fullscreen prompt for mobile
+        var startBtn = document.getElementById('start-btn');
+        var fullscreenPrompt = document.getElementById('fullscreen-prompt');
+
+        function showFullscreenPrompt() {
+            if (isMobile) {
+                fullscreenPrompt.style.display = 'flex';
+            }
+        }
+
+        startBtn.addEventListener('click', function() {
+            fullscreenPrompt.style.display = 'none';
+
+            // Try to go fullscreen (works on most mobile browsers except iOS Safari)
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(function() {});
+            } else if (document.documentElement.webkitRequestFullscreen) {
+                document.documentElement.webkitRequestFullscreen();
+            }
+
+            // Lock to landscape if possible
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(function() {});
+            }
+
+            resizeCanvas();
+            canvas.focus();
+        });
+    })();
+
+    // Emscripten Module configuration
+    var Module = {
+        canvas: (function() {
+            return document.getElementById('canvas');
+        })(),
+        onRuntimeInitialized: function() {
+            document.getElementById('loading-screen').style.display = 'none';
+
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                           ('ontouchstart' in window && window.innerWidth < 1200);
+            if (isMobile) {
+                document.getElementById('fullscreen-prompt').style.display = 'flex';
+            }
+
+            // Resize canvas for mobile
+            setTimeout(function() {
+                var canvas = document.getElementById('canvas');
+                var container = document.getElementById('canvas-container');
+                if (isMobile) {
+                    var w = window.innerWidth;
+                    var h = window.innerHeight;
+                    var gameAspect = 320 / 200;
+                    var screenAspect = w / h;
+                    var canvasW, canvasH;
+                    if (screenAspect > gameAspect) {
+                        canvasH = h;
+                        canvasW = Math.floor(h * gameAspect);
+                    } else {
+                        canvasW = w;
+                        canvasH = Math.floor(w / gameAspect);
+                    }
+                    canvas.style.width = canvasW + 'px';
+                    canvas.style.height = canvasH + 'px';
+                }
+            }, 100);
+        },
+        setStatus: function(text) {
+            var statusEl = document.getElementById('loading-status');
+            var barEl = document.getElementById('loading-bar');
+            if (!text) {
+                statusEl.textContent = 'Ready';
+                barEl.style.width = '100%';
+                return;
+            }
+
+            // Parse progress from Emscripten status text like "Downloading data... (X/Y)"
+            var match = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+            if (match) {
+                var progress = (parseInt(match[2]) / parseInt(match[4])) * 100;
+                barEl.style.width = progress + '%';
+                statusEl.textContent = match[1].trim();
+            } else {
+                statusEl.textContent = text;
+            }
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+            this.totalDependencies = Math.max(this.totalDependencies, left);
+            if (left) {
+                Module.setStatus('Loading... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')');
+            } else {
+                Module.setStatus('');
+            }
+        }
+    };
+
+    Module.setStatus('Loading...');
+    window.onerror = function() {
+        Module.setStatus('Error loading game');
+    };
+    </script>
+    {{{ SCRIPT }}}
+</body>
+</html>

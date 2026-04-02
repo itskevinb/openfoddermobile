@@ -38,6 +38,10 @@ class cWindow {
         bool                mHasFocus;
 		bool				mResized;
 
+		int					mTouchFingerCount;
+		bool				mTouchIsRightClick;
+		SDL_FingerID		mTouchPrimaryFinger;
+
 	protected:
 
 

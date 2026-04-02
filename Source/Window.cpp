@@ -41,6 +41,10 @@ cWindow::cWindow() {
 
     mHasFocus = true;
 	mResized = false;
+
+	mTouchFingerCount = 0;
+	mTouchIsRightClick = false;
+	mTouchPrimaryFinger = 0;
 }
 
 cWindow::~cWindow() {
@@ -179,35 +183,65 @@ void cWindow::EventCheck() {
 			break;
 
 		case SDL_EVENT_FINGER_MOTION:
-			Event.mType = eEvent_MouseMove;
-			Event.mPosition = cPosition((unsigned int)(SysEvent.tfinger.x * GetWindowWidth()),
-										(unsigned int)(SysEvent.tfinger.y * GetWindowHeight()));
+			// Only track motion from the primary (first) finger
+			if (SysEvent.tfinger.fingerID == mTouchPrimaryFinger) {
+				Event.mType = eEvent_MouseMove;
+				Event.mPosition = cPosition((unsigned int)(SysEvent.tfinger.x * GetWindowWidth()),
+											(unsigned int)(SysEvent.tfinger.y * GetWindowHeight()));
+			}
 			break;
 
 		case SDL_EVENT_FINGER_DOWN:
-			
-			Event.mType = eEvent_MouseLeftDown;
-			Event.mButton = 1;
-			Event.mPosition = cPosition((unsigned int)(SysEvent.tfinger.x * GetWindowWidth()),
-										(unsigned int)(SysEvent.tfinger.y * GetWindowHeight()));
+			mTouchFingerCount++;
 
-			Event.mButtonCount = 1;
+			if (mTouchFingerCount == 1) {
+				// First finger down - track as primary, start as left click
+				mTouchPrimaryFinger = SysEvent.tfinger.fingerID;
+				mTouchIsRightClick = false;
 
+				Event.mType = eEvent_MouseLeftDown;
+				Event.mButton = 1;
+				Event.mPosition = cPosition((unsigned int)(SysEvent.tfinger.x * GetWindowWidth()),
+											(unsigned int)(SysEvent.tfinger.y * GetWindowHeight()));
+				Event.mButtonCount = 1;
+			} else if (mTouchFingerCount == 2) {
+				// Second finger down - switch to right click mode
+				mTouchIsRightClick = true;
+
+				// Release the left button first
+				Event.mType = eEvent_MouseLeftUp;
+				Event.mButton = 1;
+				Event.mPosition = cPosition((unsigned int)(SysEvent.tfinger.x * GetWindowWidth()),
+											(unsigned int)(SysEvent.tfinger.y * GetWindowHeight()));
+				Event.mButtonCount = 1;
+				mEvents.push_back(Event);
+
+				// Now press right button
+				Event.mType = eEvent_MouseRightDown;
+				Event.mButton = 3;
+				Event.mButtonCount = 1;
+			}
 			break;
 
 		case SDL_EVENT_FINGER_UP:
-			Event.mType = eEvent_MouseLeftUp;
-			Event.mButton = 1;
+			mTouchFingerCount--;
+			if (mTouchFingerCount < 0)
+				mTouchFingerCount = 0;
 
 			Event.mPosition = cPosition((unsigned int)(SysEvent.tfinger.x * GetWindowWidth()),
 										(unsigned int)(SysEvent.tfinger.y * GetWindowHeight()));
-
 			Event.mButtonCount = 1;
-			mEvents.push_back(Event);
 
-			Event.mType = eEvent_MouseRightUp;
-			Event.mButton = 3;
+			if (mTouchIsRightClick) {
+				Event.mType = eEvent_MouseRightUp;
+				Event.mButton = 3;
 
+				if (mTouchFingerCount == 0)
+					mTouchIsRightClick = false;
+			} else {
+				Event.mType = eEvent_MouseLeftUp;
+				Event.mButton = 1;
+			}
 			break;
 
 		case SDL_EVENT_MOUSE_MOTION:
