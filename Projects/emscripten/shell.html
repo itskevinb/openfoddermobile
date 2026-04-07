@@ -47,8 +47,7 @@
             -webkit-touch-callout: none;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
-            background: #001122;
-            border: 1px solid #0f0;
+            background: #000;
         }
 
         #controls-overlay {
@@ -256,9 +255,7 @@
         <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
     </div>
 
-    <div id="debug-log" style="position:fixed;top:0;left:0;right:0;color:#0f0;background:rgba(0,0,0,0.8);font-size:10px;font-family:monospace;z-index:500;padding:4px;max-height:30%;overflow:auto;pointer-events:none;"></div>
-
-    <div id="controls-overlay">
+<div id="controls-overlay">
         <div class="controls-left">
             <button class="touch-btn" id="btn-squad">Squad</button>
         </div>
@@ -372,11 +369,8 @@
             }));
         }, { passive: false });
 
-        // Canvas sizing for mobile
+        // Canvas sizing - fit to viewport, preserve aspect ratio
         function resizeCanvas() {
-            if (!isMobile) return;
-
-            var container = document.getElementById('canvas-container');
             var w = window.innerWidth;
             var h = window.innerHeight;
 
@@ -399,6 +393,7 @@
             canvas.style.height = canvasH + 'px';
         }
 
+        resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('orientationchange', function() {
             setTimeout(resizeCanvas, 100);
@@ -445,40 +440,10 @@
         })(),
         onRuntimeInitialized: function() {
             document.getElementById('loading-screen').style.display = 'none';
-            document.getElementById('debug-log').textContent += 'Runtime initialized. ';
-
-            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
-                           ('ontouchstart' in window && window.innerWidth < 1200);
-
-            // Auto-resize canvas for mobile
-            if (isMobile) {
-                var w = window.innerWidth;
-                var h = window.innerHeight;
-                var gameAspect = 320 / 200;
-                var screenAspect = w / h;
-                var canvasW, canvasH;
-                if (screenAspect > gameAspect) {
-                    canvasH = h;
-                    canvasW = Math.floor(h * gameAspect);
-                } else {
-                    canvasW = w;
-                    canvasH = Math.floor(w / gameAspect);
-                }
-                var canvas = document.getElementById('canvas');
-                canvas.style.width = canvasW + 'px';
-                canvas.style.height = canvasH + 'px';
-            }
+            window.dispatchEvent(new Event('resize'));
         },
-        print: function(text) {
-            console.log(text);
-            var el = document.getElementById('debug-log');
-            if (el) el.textContent += text + '\n';
-        },
-        printErr: function(text) {
-            console.error(text);
-            var el = document.getElementById('debug-log');
-            if (el) el.textContent += 'ERR: ' + text + '\n';
-        },
+        print: function(text) { console.log(text); },
+        printErr: function(text) { console.error(text); },
         setStatus: function(text) {
             var statusEl = document.getElementById('loading-status');
             var barEl = document.getElementById('loading-bar');
@@ -509,11 +474,7 @@
     };
 
     Module.setStatus('Loading...');
-    window.onerror = function(msg, url, line) {
-        Module.setStatus('Error loading game');
-        var el = document.getElementById('debug-log');
-        if (el) el.textContent += 'ERROR: ' + msg + ' at ' + url + ':' + line + '\n';
-    };
+    window.onerror = function() { Module.setStatus('Error loading game'); };
     </script>
     {{{ SCRIPT }}}
 </body>
