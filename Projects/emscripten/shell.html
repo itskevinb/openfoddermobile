@@ -47,6 +47,8 @@
             -webkit-touch-callout: none;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
+            background: #001122;
+            border: 1px solid #0f0;
         }
 
         #controls-overlay {
@@ -266,6 +268,9 @@
     </div>
 
     <script>
+    // Suppress SDL3's text input fallback prompt dialog
+    window.prompt = function() { return ''; };
+
     (function() {
         var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
                        ('ontouchstart' in window && window.innerWidth < 1200);
