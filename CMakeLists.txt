@@ -161,7 +161,7 @@ if(EMSCRIPTEN)
         "-sUSE_SDL=3"
         "-sALLOW_MEMORY_GROWTH=1"
         "-sASSERTIONS=1"
-        "SHELL:--preload-file ${CMAKE_SOURCE_DIR}/Run@/"
+        "SHELL:--preload-file ${CMAKE_SOURCE_DIR}/Run@/usr/local/share/OpenFodder/"
         "SHELL:--shell-file ${CMAKE_SOURCE_DIR}/Projects/emscripten/shell.html")
 else()
     target_link_libraries(openfodder PRIVATE SDL3::SDL3 SDL3_mixer::SDL3_mixer Threads::Threads)
