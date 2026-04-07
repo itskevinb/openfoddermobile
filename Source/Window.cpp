@@ -73,7 +73,12 @@ bool cWindow::InitWindow( const std::string& pWindowTitle ) {
 	}
 
     PositionWindow();
+#ifdef __EMSCRIPTEN__
+	mRenderer = SDL_CreateRenderer(mWindow, "opengles2");
+	if (!mRenderer) mRenderer = SDL_CreateRenderer(mWindow, "software");
+#else
 	mRenderer = SDL_CreateRenderer(mWindow, nullptr);
+#endif
 	if (!mRenderer) {
         g_Debugger->Error("Failed to create rendered");
 		exit( 1 );
