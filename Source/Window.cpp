@@ -63,9 +63,7 @@ bool cWindow::InitWindow( const std::string& pWindowTitle ) {
 		return false;
 	}
 
-#ifndef __EMSCRIPTEN__
     ToggleFullscreen();
-#endif
 
 	mWindow = SDL_CreateWindow(pWindowTitle.c_str(), GetWindowSize().mWidth, GetWindowSize().mHeight, 0);
 	if (!mWindow) {
@@ -75,12 +73,7 @@ bool cWindow::InitWindow( const std::string& pWindowTitle ) {
 	}
 
     PositionWindow();
-#ifdef __EMSCRIPTEN__
-	mRenderer = SDL_CreateRenderer(mWindow, "opengles2");
-	if (!mRenderer) mRenderer = SDL_CreateRenderer(mWindow, "software");
-#else
 	mRenderer = SDL_CreateRenderer(mWindow, nullptr);
-#endif
 	if (!mRenderer) {
         g_Debugger->Error("Failed to create rendered");
 		exit( 1 );
@@ -91,9 +84,6 @@ bool cWindow::InitWindow( const std::string& pWindowTitle ) {
 	SetMouseSpeed(g_Fodder ? (float)g_Fodder->mStartParams->mMouseSpeed : 1.5f);
 
 
-#ifdef __EMSCRIPTEN__
-    CalculateWindowSize();
-#else
     if (g_Fodder->mParams->mWindowMode) {
         ToggleFullscreen();
         CalculateWindowSize();
@@ -102,7 +92,6 @@ bool cWindow::InitWindow( const std::string& pWindowTitle ) {
         ToggleFullscreen();
         ToggleFullscreen();
     }
-#endif
 
 	if (!g_Fodder->mParams->mMouseAlternative || (g_Fodder->mParams->mMouseAlternative && g_Fodder->mParams->mMouseLocked)) {
 		SDL_SetWindowRelativeMouseMode(mWindow, true);

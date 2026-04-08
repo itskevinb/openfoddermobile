@@ -371,11 +371,20 @@
 
         // Canvas sizing - fit to viewport, preserve aspect ratio
         function resizeCanvas() {
-            var cw = canvas.width || 640;
-            var ch = canvas.height || 400;
-            var scale = Math.min(window.innerWidth / cw, window.innerHeight / ch);
-            canvas.style.transform = 'scale(' + scale + ')';
-            canvas.style.transformOrigin = 'center center';
+            if (!isMobile) return;
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+            var gameAspect = 320 / 200;
+            var canvasW, canvasH;
+            if (w / h > gameAspect) {
+                canvasH = h;
+                canvasW = Math.floor(h * gameAspect);
+            } else {
+                canvasW = w;
+                canvasH = Math.floor(w / gameAspect);
+            }
+            canvas.style.width = canvasW + 'px';
+            canvas.style.height = canvasH + 'px';
         }
 
         window.addEventListener('resize', resizeCanvas);
@@ -424,10 +433,6 @@
         })(),
         onRuntimeInitialized: function() {
             document.getElementById('loading-screen').style.display = 'none';
-            // Resize after SDL has set canvas attrs; run a few times as SDL may resize later
-            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 50);
-            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 500);
-            setTimeout(function() { window.dispatchEvent(new Event('resize')); }, 1500);
         },
         print: function(text) { console.log(text); },
         printErr: function(text) { console.error(text); },
