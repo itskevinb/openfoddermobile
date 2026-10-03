@@ -160,6 +160,7 @@ int start(int argc, char *argv[]) {
 
 	Params->mCheatsEnabled = true;
 	Params->mMouseAlternative = true;
+	Params->mWindowMode = true;
 	g_Fodder->Prepare(Params);
 	g_Fodder->Phase_SquadPrepare();
 

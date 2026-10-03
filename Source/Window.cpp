@@ -322,18 +322,25 @@ void cWindow::EventCheck() {
 }
 
 void cWindow::CalculateWindowSize() {
+#ifdef __EMSCRIPTEN__
+	// On Emscripten, keep a fixed scaler — CSS handles display scaling.
+	mScaler = 2;
+	SetWindowSize( mScaler );
+	return;
+#else
 	SDL_DisplayID display = mWindow ? SDL_GetDisplayForWindow(mWindow) : SDL_GetPrimaryDisplay();
 	const SDL_DisplayMode* current = SDL_GetCurrentDisplayMode(display);
 	if (!current) {
 		return;
 	}
 
-	while ((mOriginalResolution.mWidth * mScaler) <= (unsigned int) (current->w / 2) && 
+	while ((mOriginalResolution.mWidth * mScaler) <= (unsigned int) (current->w / 2) &&
 			(mOriginalResolution.mHeight * mScaler) <= (unsigned int) (current->h / 2) ) {
 		++mScaler;
 	}
 
 	SetWindowSize( mScaler );
+#endif
 }
 
 int16 cWindow::CalculateFullscreenSize() {
